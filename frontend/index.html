@@ -18,7 +18,12 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);min-height:10
 .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:12px}
 .logo{font-family:var(--mono);font-size:20px;font-weight:500;letter-spacing:-.5px}
 .logo em{color:var(--blue);font-style:normal}
-.live{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--mut)}
+.live{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:12px;color:var(--mut)}
+.sbtn{background:transparent;border:1px solid var(--bdr);border-radius:8px;color:var(--mut);padding:6px 14px;font-size:12px;cursor:pointer;font-family:var(--mono);transition:all .15s;display:flex;align-items:center;gap:6px}
+.sbtn:hover{border-color:var(--blue);color:var(--blue)}
+.sbtn.loading{border-color:var(--amber);color:var(--amber);pointer-events:none}
+.sbtn.loading .spin{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:1.5rem}
@@ -67,7 +72,14 @@ tbody tr:hover td{background:var(--sur)}
 <div class="shell">
   <div class="topbar">
     <div class="logo">voo<em>alerta</em></div>
-    <div class="live"><span class="dot"></span><span id="upd">carregando...</span></div>
+    <div class="live">
+      <button class="sbtn" id="sbtn" onclick="triggerSearch()">
+        <svg id="sbtn-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        buscar agora
+      </button>
+      <span class="dot"></span>
+      <span id="upd">carregando...</span>
+    </div>
   </div>
   <div class="metrics">
     <div class="metric"><div class="ml">voos encontrados</div><div class="mv b" id="m1">—</div></div>
@@ -178,6 +190,30 @@ function render(){
 }
 
 load(); setInterval(load,300000);
+
+async function triggerSearch(){
+  const btn = document.getElementById('sbtn');
+  btn.classList.add('loading');
+  btn.innerHTML = '<svg class="spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> buscando...';
+
+  try {
+    await fetch('/api/search', {method:'POST'});
+    // Fica verificando até terminar
+    const check = setInterval(async () => {
+      const r = await fetch('/api/search/status');
+      const s = await r.json();
+      if(!s.running){
+        clearInterval(check);
+        btn.classList.remove('loading');
+        btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> buscar agora';
+        load();
+      }
+    }, 3000);
+  } catch(e) {
+    btn.classList.remove('loading');
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> buscar agora';
+  }
+}
 </script>
 </body>
 </html>
