@@ -124,8 +124,10 @@ function waLink(f){
   const airline = f.airline && f.airline !== 'Unknown' ? f.airline : 'companhia aérea';
   const stops = f.stops === 0 ? '✈️ voo direto' : `🔄 ${f.stops} parada(s)`;
   const duration = f.duration && f.duration !== '—' ? ` · ${f.duration}` : '';
-  const priceOrig = f.price_orig && f.discount > 0 ? `\n💸 *De R$ ${f.price_orig} por apenas R$ ${f.price}*` : `\n💰 *R$ ${f.price}*`;
-  const discount = f.discount > 0 ? ` com *${f.discount}% OFF* 🔥` : ' — *preço baixo agora!* 🔥';
+
+  const discountLine = f.price_level === 'low'
+    ? '🔥 *Preço até 30% abaixo do normal!*'
+    : '💡 *Preço dentro da média do mercado*';
 
   const msg =
 `✈️ *VOO COM DESCONTO!*
@@ -134,13 +136,13 @@ function waLink(f){
 📅 Dia *${f.date}* às *${f.time}*
 🏢 ${airline}
 ${stops}${duration}
-${priceOrig}${discount}
 
-⚡ Corre que é por tempo limitado!
-🔗 Acesse: vooalerta-production.up.railway.app`;
+${discountLine}
+
+⚡ Corre que é por tempo limitado!`;
 
   const encoded = encodeURIComponent(msg);
-  return `https://chat.whatsapp.com/GSYH9v82bYl8jhoo6Td5f2?text=${encoded}`;
+  return `https://web.whatsapp.com/send?text=${encoded}`;
 }
 
 function waIcon(){
