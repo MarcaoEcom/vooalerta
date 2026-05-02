@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>VooAlerta</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0f11;--sur:#16181c;--sur2:#1e2026;--bdr:#2a2d35;
+  --txt:#e8eaf0;--mut:#6b7280;
+  --blue:#3b82f6;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;
+  --font:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;
+}
+body{background:var(--bg);color:var(--txt);font-family:var(--font);min-height:100vh}
+.shell{max-width:1100px;margin:0 auto;padding:2rem 1.5rem}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:12px}
+.logo{font-family:var(--mono);font-size:20px;font-weight:500;letter-spacing:-.5px}
+.logo em{color:var(--blue);font-style:normal}
+.live{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--mut)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:1.5rem}
+.metric{background:var(--sur);border:1px solid var(--bdr);border-radius:10px;padding:16px}
+.ml{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin-bottom:6px}
+.mv{font-family:var(--mono);font-size:26px;font-weight:500}
+.mv.b{color:var(--blue)}.mv.g{color:var(--green)}.mv.a{color:var(--amber)}
+.filters{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.srch{flex:1;min-width:180px;background:var(--sur);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);padding:8px 14px;font-size:13px;font-family:var(--font);outline:none}
+.srch:focus{border-color:var(--blue)}
+.fbtn{background:var(--sur);border:1px solid var(--bdr);border-radius:8px;color:var(--mut);padding:7px 14px;font-size:12px;cursor:pointer;font-family:var(--mono);transition:all .15s}
+.fbtn:hover{border-color:var(--blue);color:var(--blue)}
+.fbtn.on{background:rgba(59,130,246,.12);border-color:var(--blue);color:var(--blue)}
+.twrap{border:1px solid var(--bdr);border-radius:10px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:var(--sur);color:var(--mut);font-weight:500;padding:10px 14px;text-align:left;border-bottom:1px solid var(--bdr);font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+tbody td{padding:12px 14px;border-bottom:1px solid var(--bdr);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--sur)}
+.rm{font-family:var(--mono);font-weight:500;font-size:13px}
+.rs{font-size:11px;color:var(--mut);margin-top:3px}
+.chip{background:var(--sur2);border:1px solid var(--bdr);border-radius:999px;padding:2px 10px;font-size:11px;color:var(--mut);font-family:var(--mono)}
+.best{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:var(--green)}
+.po{color:var(--mut);text-decoration:line-through;font-size:11px;font-family:var(--mono)}
+.pn{font-family:var(--mono);font-size:14px;font-weight:500;margin-top:2px}
+.plevel{font-size:10px;margin-top:3px;font-family:var(--mono)}
+.plevel.low{color:var(--green)}.plevel.typical{color:var(--mut)}.plevel.high{color:var(--red)}
+.disc{border-radius:999px;padding:2px 9px;font-size:11px;font-family:var(--mono);font-weight:500}
+.disc.lo{background:rgba(34,197,94,.12);color:var(--green)}
+.disc.hi{background:rgba(245,158,11,.12);color:var(--amber)}
+.disc.vhi{background:rgba(239,68,68,.12);color:var(--red)}
+.disc.na{background:var(--sur2);color:var(--mut)}
+.sdot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:5px}
+.sdot.ativo{background:var(--green)}.sdot.expirado{background:var(--mut)}
+.badge{border-radius:999px;padding:2px 9px;font-size:11px;font-family:var(--mono)}
+.badge.s{background:rgba(59,130,246,.12);color:var(--blue)}
+.badge.p{background:rgba(245,158,11,.12);color:var(--amber)}
+.empty{text-align:center;padding:3rem;color:var(--mut);font-size:14px}
+.footer{margin-top:1.5rem;text-align:center;font-size:11px;color:var(--mut);font-family:var(--mono)}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="logo">voo<em>alerta</em></div>
+    <div class="live"><span class="dot"></span><span id="upd">carregando...</span></div>
+  </div>
+  <div class="metrics">
+    <div class="metric"><div class="ml">voos encontrados</div><div class="mv b" id="m1">—</div></div>
+    <div class="metric"><div class="ml">enviados hoje</div><div class="mv g" id="m2">—</div></div>
+    <div class="metric"><div class="ml">maior desconto</div><div class="mv a" id="m3">—</div></div>
+    <div class="metric"><div class="ml">desc. mínimo</div><div class="mv" id="m4">—</div></div>
+  </div>
+  <div class="filters">
+    <input class="srch" id="srch" placeholder="buscar cidade, rota ou cia aérea..." oninput="render()"/>
+    <button class="fbtn on" onclick="setF('todos',this)">todos</button>
+    <button class="fbtn" onclick="setF('ativo',this)">ativos</button>
+    <button class="fbtn" onclick="setF('enviado',this)">enviados</button>
+    <button class="fbtn" onclick="setF('pendente',this)">pendentes</button>
+  </div>
+  <div class="twrap">
+    <table>
+      <thead><tr>
+        <th>rota</th><th>cia aérea</th><th>data</th><th>hora</th>
+        <th>duração</th><th>preço</th><th>desconto</th><th>envio</th>
+      </tr></thead>
+      <tbody id="tbody"><tr><td colspan="8" class="empty">carregando voos...</td></tr></tbody>
+    </table>
+  </div>
+  <div class="footer">google flights via fast-flights &nbsp;·&nbsp; atualiza a cada 5 min</div>
+</div>
+<script>
+let all=[], filt='todos';
+
+async function load(){
+  try{
+    const [s,f]=await Promise.all([fetch('/api/stats'),fetch('/api/flights')]);
+    const st=await s.json(), fd=await f.json();
+    document.getElementById('m1').textContent=st.total;
+    document.getElementById('m2').textContent=st.sent;
+    document.getElementById('m3').textContent=st.max_disc+'%';
+    document.getElementById('m4').textContent=st.min_cfg+'%';
+    const d=new Date(fd.updated_at);
+    document.getElementById('upd').textContent='atualizado '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    all=fd.flights; render();
+  }catch(e){
+    document.getElementById('tbody').innerHTML='<tr><td colspan="8" class="empty">erro ao conectar — verifique se o backend está rodando</td></tr>';
+  }
+}
+
+function setF(f,el){
+  filt=f;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on'); render();
+}
+
+function dc(d){return d>=40?'vhi':d>=30?'hi':d>0?'lo':'na'}
+
+function render(){
+  const q=document.getElementById('srch').value.toLowerCase();
+  let data=all.filter(f=>{
+    const m=(f.origin_city+f.dest_city+f.airline).toLowerCase().includes(q);
+    if(!m)return false;
+    if(filt==='ativo')return f.status==='ativo';
+    if(filt==='enviado')return f.sent;
+    if(filt==='pendente')return !f.sent&&f.status==='ativo';
+    return true;
+  });
+  const b=document.getElementById('tbody');
+  if(!data.length){b.innerHTML='<tr><td colspan="8" class="empty">nenhum voo encontrado</td></tr>';return;}
+  b.innerHTML=data.map(f=>`<tr>
+    <td><div class="rm">${f.origin} → ${f.destination}</div><div class="rs">${f.origin_city} → ${f.dest_city}</div></td>
+    <td><span class="chip ${f.is_best?'best':''}">${f.airline}</span></td>
+    <td>${f.date}</td>
+    <td style="font-family:var(--mono)">${f.time}</td>
+    <td style="color:var(--mut);font-size:12px">${f.duration} · ${f.stops===0?'direto':f.stops+' parada'}</td>
+    <td>
+      ${f.discount>0?`<div class="po">R$ ${f.price_orig}</div>`:''}
+      <div class="pn">R$ ${f.price}</div>
+      <div class="plevel ${f.price_level}">${f.price_level==='low'?'preço baixo':f.price_level==='high'?'preço alto':'típico'}</div>
+    </td>
+    <td><span class="disc ${dc(f.discount)}">${f.discount>0?f.discount+'%':'—'}</span></td>
+    <td><span class="badge ${f.sent?'s':'p'}">${f.sent?'enviado':'pendente'}</span></td>
+  </tr>`).join('');
+}
+
+load(); setInterval(load,300000);
+</script>
+</body>
+</html>
